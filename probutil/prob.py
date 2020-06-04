@@ -1,5 +1,6 @@
 import random
 import math
+from collections import Counter
 
 class Discrete:
     def __init__(self, dist, name = ""):
@@ -110,16 +111,31 @@ class Discrete:
     def probsum(self):
         return sum(self.dist.values())
 
-def dpb(dist, name = "unknown"):
-    if isinstance(dist, dict): 
+def dpb(dist, name = "unknown", rand = False):
+    if isinstance(dist, dict):
+        if rand == True:
+            raise Exception("Random distribution is not supported with a dict")
         return Discrete(dist, name)
-    elif isinstance(dist, range) or isinstance(dist, list):
-        out_dict = dict.fromkeys(dist, 0)
+    elif isinstance(dist, range) or isinstance(dist, set):
+        if rand == True:  # random distribution
+            n = len(dist)
+            lst = [0] * n
+            for _ in range(100):
+                lst[random.randint(0, n - 1)] += 0.01 
+            return Discrete(dict(zip(dist, lst)), name)
+        else:   # uniform distribution
+            n = len(dist)
+            lst = [1 / n] * n
+            return Discrete(dict(zip(dist, lst)), name)
+    elif isinstance(dist, list) or isinstance(dist, tuple):
+        if rand == True:
+            raise Exception("Random distribution is not supported with a list or tuple")
         n = len(dist)
-        lst = [0] * n
-        for _ in range(100):
-            lst[random.randint(0, n - 1)] += 0.01 
-        return Discrete(dict(zip(dist, lst)), name)
+        vs = Counter(dist).keys()
+        ps = [c / n for c in Counter(dist).values()]
+        return Discrete(dict(zip(vs, ps)), name)
+    else:
+        raise TypeError("Invalid data type: " + type(dist))
 
 def pbmax2(prob1, prob2):
     if not isinstance(prob1, Discrete):
