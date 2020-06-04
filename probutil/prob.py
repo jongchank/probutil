@@ -77,6 +77,10 @@ class Discrete:
     def rvs(self, n):
         return random.choices(list(self.dist.keys()), list(self.dist.values()), k = n)
 
+    def raw(self):
+        # dictionary is not guaranteed to be sorted
+        return [key for key in sorted(self.dist.keys())], [self.dist[key] for key in sorted(self.dist.keys())]
+
     def quantile(self, q):
         p_sum = 0
         for value, prob in sorted(self.dist.items()):
