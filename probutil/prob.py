@@ -82,6 +82,9 @@ class Discrete:
         # dictionary is not guaranteed to be sorted
         return [key for key in sorted(self.dist.keys())], [self.dist[key] for key in sorted(self.dist.keys())]
 
+    def setname(self, name):
+        self.name = name
+
     def quantile(self, q):
         p_sum = 0
         for value, prob in sorted(self.dist.items()):
@@ -130,10 +133,22 @@ def dpb(dist, name = "unknown", rand = False):
     elif isinstance(dist, list) or isinstance(dist, tuple):
         if rand == True:
             raise Exception("Random distribution is not supported with a list or tuple")
-        n = len(dist)
-        vs = Counter(dist).keys()
-        ps = [c / n for c in Counter(dist).values()]
-        return Discrete(dict(zip(vs, ps)), name)
+        if ((isinstance(dist[0], list) or isinstance(dist[0], list)) and
+            (isinstance(dist[1], list) or isinstance(dist[1], list))):
+            if len(dist[0]) != len(dist[1]):
+                raise Exception("Values list and probabilities list should be of the same length") 
+            d = dict()
+            for v, p in zip(dist[0], dist[1]):
+                if v not in d:
+                    d.update({v:p}) 
+                else:
+                    d.update({v:d[v] + p})
+            return Discrete(d, name)
+        else:
+            n = len(dist)
+            vs = Counter(dist).keys()
+            ps = [c / n for c in Counter(dist).values()]
+            return Discrete(dict(zip(vs, ps)), name)
     else:
         raise TypeError("Invalid data type: " + type(dist))
 
@@ -184,7 +199,7 @@ def pbceil(prob):
         out_value = math.ceil(in_value)
         out_prob = in_prob
         if out_value not in out_dict:
-            out_dict.update({out_value: out_prob}) 
+            out_dict.update({out_value: out_prob})
         else:
             out_dict.update({out_value: out_dict[out_value] + out_prob})
     return Discrete(out_dict, "ceil(" + prob.name + ")")
