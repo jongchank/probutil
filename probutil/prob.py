@@ -59,14 +59,14 @@ class Discrete:
     def __truediv__(self, other):
         a_dict = self.dist
         if isinstance(other, Discrete):
-            raise TypeError("Division by Discrete not supported")
+            raise TypeError("Division not supported")
         else:
             return Discrete({value / other: prob for value, prob in a_dict.items()}, self.name + "/" + str(other)) 
 
     def __mul__(self, other):
         a_dict = self.dist
         if isinstance(other, Discrete):
-            raise TypeError("Multiplication between Discretes not supported")
+            raise TypeError("Multiplication not supported")
         else:
             return Discrete({value * other: prob for value, prob in a_dict.items()}, self.name + "*" + str(other)) 
 
@@ -74,6 +74,18 @@ class Discrete:
         out = self * other;
         out.name = str(other) + "*" + self.name
         return out
+
+    def p(self, op, x):
+        if op == "=" or op == "==":
+            return self.dist[x] if x in self.dist else 0
+        elif op == "<":
+            return sum([self.dist[k] for k in self.dist.keys() if k < x]) 
+        elif op == "<=":
+            return sum([self.dist[k] for k in self.dist.keys() if k <= x]) 
+        elif op == ">":
+            return sum([self.dist[k] for k in self.dist.keys() if k > x]) 
+        elif op == ">=":
+            return sum([self.dist[k] for k in self.dist.keys() if k >= x]) 
 
     def rvs(self, n):
         return random.choices(list(self.dist.keys()), list(self.dist.values()), k = n)
@@ -111,7 +123,7 @@ class Discrete:
     def std(self):
         return math.sqrt(self.var())
 
-    def probsum(self):
+    def psum(self):
         return sum(self.dist.values())
 
 def dpb(dist, name = "unknown", rand = False):
@@ -152,7 +164,7 @@ def dpb(dist, name = "unknown", rand = False):
     else:
         raise TypeError("Invalid data type: " + type(dist))
 
-def pbmax2(prob1, prob2):
+def __max2(prob1, prob2):
     if not isinstance(prob1, Discrete):
         raise Exception("First argument should be a Discrete object")
     a_dict = prob1.dist
@@ -184,7 +196,7 @@ def pbmax(*args):
     out = args[0]
     name = "max(" + args[0].name + ","
     for a in args[1:]:
-        out = pbmax2(out, a)
+        out = __max2(out, a)
         if isinstance(a, Discrete): 
             name += a.name + ","
         else:
